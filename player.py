@@ -4,7 +4,7 @@ import time
 import threading
 import subprocess
 
-button = 2
+button = 14
 
 GPIO.setmode(GPIO.BCM)
 
