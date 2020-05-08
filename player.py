@@ -6,42 +6,45 @@ import subprocess
 import glob
 
 pause_play = 14
-vol_up = 15
+next_track = 15
+vol_up = 18
 
 GPIO.setmode(GPIO.BCM)
 
-
 GPIO.setup(pause_play, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+GPIO.setup(next_track, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 GPIO.setup(vol_up, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-
 master, slave = os.openpty()
 
 os.system('mount /dev/sda1 ../../../../media/pi/usb')
 
-def pause():
+def button(pin, c):
     while True:
-        if GPIO.input(pause_play) == False:
-                os.write(slave, 's')
-                while GPIO.input(pause_play) == False:
+        if GPIO.input(pin) == False:
+                os.write(slave, c)
+                while GPIO.input(pin) == False:
                     time.sleep(0.2)
 
 def volume_up():
     while True:
         if GPIO.input(vol_up) == False:
-                os.write(slave, 'f')
+                os.system("amixer set PCM -- $[$(amixer get PCM|grep -o [0-9]*%|sed 's/%//')+5]%")
                 while GPIO.input(vol_up) == False:
                     time.sleep(0.2)
 
+
 try:
     player = subprocess.Popen(["mpg123", "-Z", "-C"] + glob.glob("../../../../media/pi/usb/*.mp3"), stdin=master)
-    t1 = threading.Thread(target=pause, args=())
-    t2 = threading.Thread(target=volume_up, args=())
+    threads = [threading.Thread(target=button, args=(pause_play, 's')),    
+                threading.Thread(target=button, args=(next_track, 'f')),
+                threading.Thread(target=volume_up, args=())]
 
-    t1.start()
-    t2.start()
+    for t in threads:
+        t.start()
 
-    t1.join()
-    t2.join()
+    for t in threads:
+        t.join()
+
 except KeyboardInterrupt:
     os.write(slave, 'q')
     GPIO.cleanup()
