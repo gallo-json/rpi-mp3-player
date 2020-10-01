@@ -2,5 +2,7 @@
 
 I lost my mp3 player so I'm making one
 
-Add python script to /etc/rc.local to run it on startup
-sudo python3 player.py
+## How to run.
+
+1. Add python script to `/etc/rc.local` to run it on startup
+2. Run, `sudo python3 player.py`
